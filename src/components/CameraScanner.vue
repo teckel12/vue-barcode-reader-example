@@ -229,12 +229,6 @@ export default {
 .barcode-container.scanning {
   filter: brightness(0.25);
 }
-.barcode-container {
-  max-height: calc(100vh - 80px) !important;
-}
-.scanner-container {
-  max-height: calc(100vh - 80px) !important;
-}
 
 .zoom-container {
   position: absolute;

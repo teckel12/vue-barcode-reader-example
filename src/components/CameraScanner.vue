@@ -1,27 +1,38 @@
 <template>
-  <div v-if="!landscape">
-    <h1>Vue Barcode Reader</h1>
-    <h3>Use mobile device for all features</h3>
-  </div>
-  <div class="container">
+  <div
+    v-if="modalState"
+    class="modal-container"
+  >
     <div class="controls">
       <div class="title">
         Scan Barcode...
       </div>
       <div v-if="loaded">
         <div :class="{
-          'disabled': !hasAutofocus,
-          'activated': hasAutofocus && autofocus,
+          'disabled': videoDevices?.length < 2,
         }">
           <SvgIcon
             type="mdi"
-            :path="!hasAutofocus || autofocus ? icons.mdiFocusAuto : icons.mdiBlur"
+            :path="videoDevices?.length < 2 ? icons.mdiCamera : icons.mdiCameraSwitch"
+            @click="switchInputDevice"
+          />
+        </div>
+      </div>
+      <div v-if="loaded">
+        <div :class="{
+          'disabled': !hasAutofocus,
+          'activated': hasAutofocus === autofocus,
+        }">
+          <SvgIcon
+            type="mdi"
+            :path="hasAutofocus && autofocus ? icons.mdiFocusAuto : icons.mdiBlur"
             @click="autofocus = hasAutofocus ? !autofocus : autofocus"
           />
         </div>
       </div>
       <div v-if="loaded">
         <div :class="{
+          'disabled': !isMobile || !isAndroid || !isChrome,
           'activated': landscape,
         }">
           <SvgIcon
@@ -34,7 +45,7 @@
       <div v-if="loaded">
         <div :class="{
           'disabled': !hasTorch,
-          'activated': torch,
+          'activated': hasTorch && torch,
         }">
           <SvgIcon
             type="mdi"
@@ -43,9 +54,19 @@
           />
         </div>
       </div>
+      <div>
+        <div class="close">
+          <SvgIcon
+            type="mdi"
+            :path="icons.mdiCloseThick"
+            @click="modalClose"
+          />
+        </div>
+      </div>
     </div>
-    <div class="barcode-container" :class="{ 'scanning': scanning }">
+    <div class="barcode-container">
       <StreamBarcodeReader
+        v-model:videoDevices="videoDevices"
         v-model:hasFocusDistance="hasFocusDistance"
         v-model:hasAutofocus="hasAutofocus"
         v-model:hasTorch="hasTorch"
@@ -55,6 +76,7 @@
         :zoom="Number(zoom)"
         :autofocus="autofocus"
         :focus-distance="Number(focusDistance)"
+        :device-index="deviceIndex"
         @decode="onDecode"
         @loaded="onLoaded"
       />
@@ -67,7 +89,7 @@
           v-model="focusDistance"
           type="range"
           :min="hasFocusDistance.min || 0"
-          :max="Math.min(hasFocusDistance.max, 1)"
+          :max="hasFocusDistance.max || 1"
           :step="hasFocusDistance.step || 0.1"
         />
       </div>
@@ -86,25 +108,13 @@
         />
       </div>
     </div>
-    <div class="decoded">
-      Decoded barcode: <b>{{ decodedText }}</b>
-    </div>
-  </div>
-
-  <div v-if="!landscape">
-    <p class="information">
-      <strong>Github: </strong>
-      <a href="https://github.com/teckel12/vue-barcode-reader" target="_blank">teckel12/vue-barcode-reader</a>
-    </p>
-    <p>
-      <strong>NPM: </strong>
-      <a href="https://www.npmjs.com/package/@teckel/vue-barcode-reader" target="_blank">@teckel/vue-barcode-reader</a>
-    </p>
   </div>
 </template>
 
 <script>
-import { StreamBarcodeReader } from "@teckel/vue-barcode-reader"
+// This is here for testing purposes
+// import StreamBarcodeReader from './StreamBarcodeReader.vue'
+import { StreamBarcodeReader } from '@teckel/vue-barcode-reader'
 import SvgIcon from '@jamescoyle/vue-icon'
 import {
   mdiLightbulbOn,
@@ -113,87 +123,144 @@ import {
   mdiPhoneRotateLandscape,
   mdiFocusAuto,
   mdiBlur,
+  mdiCloseThick,
+  mdiCameraSwitch,
+  mdiCamera,
 } from '@mdi/js'
 
 const barcodeScannedAudio = new Audio('./assets/barcode-scanned.mp3')
 
+const initialState = {
+  loaded: false,
+  modalState: false,
+  torch: false,
+  zoom: 1,
+  autofocus: true,
+  focusDistance: 0,
+  landscape: false,
+  hasTorch: false,
+  hasZoom: false,
+  hasAutofocus: false,
+  hasFocusDistance: false,
+  videoDevices: {},
+  deviceIndex: null,
+  isMobile: navigator?.userAgentData?.mobile || navigator?.platform === 'iPad' || navigator?.platform === 'iPhone',
+  isAndroid: navigator?.userAgentData?.platform === 'Android',
+  isChrome: navigator?.userAgentData?.brands.findIndex(brand => brand.brand === 'Google Chrome' || brand.brand === 'Chromium') !== -1,
+  icons: {
+    mdiLightbulbOn,
+    mdiLightbulbOutline,
+    mdiPhoneRotatePortrait,
+    mdiPhoneRotateLandscape,
+    mdiFocusAuto,
+    mdiBlur,
+    mdiCloseThick,
+    mdiCameraSwitch,
+    mdiCamera,
+  },
+}
+
 export default {
   components: { StreamBarcodeReader, SvgIcon },
+  emits: ['update:modelValue', 'update:openModal'],
+  props: {
+    modelValue: {
+      type: [String, Number],
+      default: null,
+    },
+    openModal: {
+      type: Boolean,
+      default: false,
+    },
+  },
   data() {
     return {
-      loaded: false,
-      decodedText: '[Scan Barcode...]',
-      torch: false,
-      zoom: 1,
-      autofocus: true,
-      focusDistance: 0,
-      landscape: false,
-      hasTorch: false,
-      hasZoom: false,
-      hasAutofocus: false,
-      hasFocusDistance: false,
-      scanning: false,
-      scanPause: false,
-      scanningTimeout: null,
-      scanPauseTimeout: null,
-      icons: {
-        mdiLightbulbOn,
-        mdiLightbulbOutline,
-        mdiPhoneRotatePortrait,
-        mdiPhoneRotateLandscape,
-        mdiFocusAuto,
-        mdiBlur,
-      },
+      ...initialState,
     }
+  },
+  computed: {
+  },
+  watch: {
+    openModal() {
+      this.modalState = this.openModal
+    },
+    hasAutofocus() {
+      this.autofocus = this.hasAutofocus
+    },
+    'videoDevices.selectedIndex': {
+      handler() {
+        this.deviceIndex = this.videoDevices?.selectedIndex
+      }
+    },
+  },
+  beforeUnmount() {
+    this.modalClose()
+  },
+  mounted() {
   },
   methods: {
     onLoaded() {
       this.loaded = true
+      if (!this.hasAutofocus) {
+        this.autofocus = false
+      }
       console.log('loaded')
     },
     onDecode(decodedText) {
-      if (this.decodedText === decodedText && this.scanPause) return
-      this.decodedText = decodedText
       barcodeScannedAudio.play()
-      this.scanning = true
-      this.scanPause = true
       console.log('Barcode scanned:', decodedText)
-      clearTimeout(this.scanningTimeout)
-      this.scanningTimeout = setTimeout(() => {
-        this.scanning = false
-      }, 100)
-      clearTimeout(this.scanPauseTimeout)
-      this.scanPauseTimeout = setTimeout(() => {
-        this.scanPause = false
-      }, 1000)
+      this.$emit('update:modelValue', decodedText)
+      this.modalClose()
+    },
+    switchInputDevice() {
+      const length = this.videoDevices?.devices?.length
+      if (this.deviceIndex >= 0 && length > 1) {
+        this.loaded = false
+        this.deviceIndex = this.deviceIndex + 1 >= length ? 0 : this.deviceIndex + 1
+      }
+    },
+    modalClose() {
+      Object.assign(this.$data, initialState)
+      this.$emit('update:openModal', false)
     },
   },
 }
 </script>
 
-<style scoped>
-.container {
-  max-height: 100vh;
+<style>
+.modal-container {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background-color: black;
 }
 
 .controls {
-  background-color: black;
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   height: 50px;
-  padding: 0 10px 0 20px;
+  padding: 0 5px 0 10px;
 }
 .controls .title {
   font-size: 17px;
-  flex-basis: 80%;
+  flex-basis: 90%;
   color: white;
   text-align: left;
   white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
 }
 .controls > div {
-  flex-basis: 60px;
+  flex-basis: 50px;
+  min-width: 50px;
 }
 .controls > div > div {
   position: relative;
@@ -210,7 +277,11 @@ export default {
   background-color: royalblue;
 }
 .controls > div > div.disabled {
-  filter: blur(1px) opacity(0.75);
+  filter: blur(1px) brightness(0.66);
+}
+.controls > div > div.close {
+  color: red;
+  background-color: transparent;
 }
 .controls > div > div.disabled:after {
   content: '';
@@ -224,16 +295,24 @@ export default {
 }
 
 .barcode-container {
-  position: relative;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-.barcode-container.scanning {
-  filter: brightness(0.25);
+.scanner-container {
+  width: 100%;
+  max-width: 1000px;
 }
 
 .zoom-container {
   position: absolute;
   z-index: 3;
-  top: 0;
+  top: 50px;
   bottom: 0;
   right: 0;
   width: 55px;
@@ -259,7 +338,7 @@ export default {
 .focus-container {
   position: absolute;
   z-index: 3;
-  top: 0;
+  top: 50px;
   bottom: 0;
   left: 0;
   width: 55px;
@@ -280,28 +359,5 @@ export default {
   position: absolute;
   left: -75px;
   top: 120px;
-}
-
-.decoded {
-  font-size: 17px;
-  white-space: nowrap;
-  color: white;
-  background-color: black;
-  align-items: center;
-  height: 30px;
-  line-height: 30px;
-  padding: 0 20px;
-}
-a {
-  color: #42b983;
-}
-.information {
-  margin-top: 50px;
-}
-</style>
-
-<style>
-video {
-  max-height: calc(100vh - 80px) !important;
 }
 </style>

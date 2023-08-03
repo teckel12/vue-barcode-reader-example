@@ -38,7 +38,7 @@
           <SvgIcon
             type="mdi"
             :path="landscape ? icons.mdiPhoneRotatePortrait : icons.mdiPhoneRotateLandscape"
-            @click="landscape = !landscape"
+            @click="landscape = (isMobile && isAndroid && isChrome) ? !landscape : landscape"
           />
         </div>
       </div>

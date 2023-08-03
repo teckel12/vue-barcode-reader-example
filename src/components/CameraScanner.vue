@@ -144,6 +144,8 @@ const initialState = {
   hasFocusDistance: false,
   videoDevices: {},
   deviceIndex: null,
+  debounce: false,
+  debounceTimeout: null,
   isMobile: navigator?.userAgentData?.mobile || navigator?.platform === 'iPad' || navigator?.platform === 'iPhone',
   isAndroid: navigator?.userAgentData?.platform === 'Android',
   isChrome: navigator?.userAgentData?.brands.findIndex(brand => brand.brand === 'Google Chrome' || brand.brand === 'Chromium') !== -1,
@@ -187,6 +189,12 @@ export default {
     hasAutofocus() {
       this.autofocus = this.hasAutofocus
     },
+    focusDistance() {
+      this.sliderMovement()
+    },
+    zoom() {
+      this.sliderMovement()
+    },
     'videoDevices.selectedIndex': {
       handler() {
         this.deviceIndex = this.videoDevices?.selectedIndex
@@ -217,6 +225,16 @@ export default {
       if (this.deviceIndex >= 0 && length > 1) {
         this.loaded = false
         this.deviceIndex = this.deviceIndex + 1 >= length ? 0 : this.deviceIndex + 1
+      }
+    },
+    sliderMovement() {
+      if (!this.debounce) {
+        this.debounce = true
+        window.navigator?.vibrate?.(10)
+        clearTimeout(this.debounceTimeout)
+        this.debounceTimeout = setTimeout(() => {
+          this.debounce = false
+        }, 10)
       }
     },
     modalClose() {

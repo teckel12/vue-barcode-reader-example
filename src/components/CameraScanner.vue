@@ -10,13 +10,13 @@
       <div v-if="loaded">
         <div
           :class="{
-            'disabled': videoDevices?.length < 2,
+            'disabled': videoDevices?.devices?.length < 2,
           }"
           @click="switchInputDevice"
         >
           <SvgIcon
             type="mdi"
-            :path="videoDevices?.length < 2 ? icons.mdiCamera : icons.mdiCameraSwitch"
+            :path="videoDevices?.devices?.length < 2 ? icons.mdiCamera : icons.mdiCameraSwitch"
           />
         </div>
       </div>

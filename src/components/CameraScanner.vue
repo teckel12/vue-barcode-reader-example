@@ -8,58 +8,68 @@
         Scan Barcode...
       </div>
       <div v-if="loaded">
-        <div :class="{
-          'disabled': videoDevices?.length < 2,
-        }">
+        <div
+          :class="{
+            'disabled': videoDevices?.length < 2,
+          }"
+          @click="switchInputDevice"
+        >
           <SvgIcon
             type="mdi"
             :path="videoDevices?.length < 2 ? icons.mdiCamera : icons.mdiCameraSwitch"
-            @click="switchInputDevice"
           />
         </div>
       </div>
       <div v-if="loaded">
-        <div :class="{
-          'disabled': !hasAutofocus,
-          'activated': hasAutofocus === autofocus,
-        }">
+        <div
+          :class="{
+            'disabled': !hasAutofocus,
+            'activated': !autofocus && hasFocusDistance,
+          }"
+          @click="autofocus = !autofocus"
+        >
           <SvgIcon
             type="mdi"
-            :path="hasAutofocus && autofocus ? icons.mdiFocusAuto : icons.mdiBlur"
-            @click="autofocus = hasAutofocus ? !autofocus : autofocus"
+            :path="hasAutofocus && autofocus ? icons.mdiFocusAuto : icons.mdiImageFilterCenterFocusWeak"
           />
         </div>
       </div>
       <div v-if="loaded">
-        <div :class="{
-          'disabled': !isMobile || !isAndroid || !isChrome,
-          'activated': landscape,
-        }">
+        <div
+          :class="{
+            'disabled': !isAndroidChrome,
+            'activated': landscape,
+          }"
+          @click="landscape = !landscape"
+        >
           <SvgIcon
             type="mdi"
             :path="landscape ? icons.mdiPhoneRotatePortrait : icons.mdiPhoneRotateLandscape"
-            @click="landscape = (isMobile && isAndroid && isChrome) ? !landscape : landscape"
           />
         </div>
       </div>
       <div v-if="loaded">
-        <div :class="{
-          'disabled': !hasTorch,
-          'activated': hasTorch && torch,
-        }">
+        <div
+          :class="{
+            'disabled': !hasTorch,
+            'activated': hasTorch && torch,
+          }"
+          @click="torch = !torch"
+        >
           <SvgIcon
             type="mdi"
             :path="torch ? icons.mdiLightbulbOn : icons.mdiLightbulbOutline"
-            @click="torch = hasTorch ? !torch : torch"
           />
         </div>
       </div>
       <div>
-        <div class="close">
+        <div
+          class="close"
+          @click="modalClose"
+        >
           <SvgIcon
             type="mdi"
             :path="icons.mdiCloseThick"
-            @click="modalClose"
           />
         </div>
       </div>
@@ -89,7 +99,7 @@
           v-model="focusDistance"
           type="range"
           :min="hasFocusDistance.min || 0"
-          :max="hasFocusDistance.max || 1"
+          :max="Math.min(hasFocusDistance.max, 2) || 1"
           :step="hasFocusDistance.step || 0.1"
         />
       </div>
@@ -122,7 +132,7 @@ import {
   mdiPhoneRotatePortrait,
   mdiPhoneRotateLandscape,
   mdiFocusAuto,
-  mdiBlur,
+  mdiImageFilterCenterFocusWeak,
   mdiCloseThick,
   mdiCameraSwitch,
   mdiCamera,
@@ -155,7 +165,7 @@ const initialState = {
     mdiPhoneRotatePortrait,
     mdiPhoneRotateLandscape,
     mdiFocusAuto,
-    mdiBlur,
+    mdiImageFilterCenterFocusWeak,
     mdiCloseThick,
     mdiCameraSwitch,
     mdiCamera,
@@ -181,6 +191,9 @@ export default {
     }
   },
   computed: {
+    isAndroidChrome() {
+      return this.isMobile && this.isAndroid && this.isChrome
+    }
   },
   watch: {
     openModal() {
@@ -276,11 +289,11 @@ export default {
   overflow-x: hidden;
   text-overflow: ellipsis;
 }
-.controls > div {
+.controls > div:not(.title) {
   flex-basis: 50px;
   min-width: 50px;
 }
-.controls > div > div {
+.controls > div:not(.title) > div {
   position: relative;
   width: 40px;
   height: 40px;
@@ -289,12 +302,14 @@ export default {
   border-radius: 50%;
   color: #CCC;
   background-color: grey;
+  cursor: pointer;
 }
 .controls > div > div.activated {
   color: white;
   background-color: royalblue;
 }
 .controls > div > div.disabled {
+  pointer-events: none;
   filter: blur(1px) brightness(0.66);
 }
 .controls > div > div.close {
@@ -323,7 +338,6 @@ export default {
   align-items: center;
 }
 .scanner-container {
-  width: 100%;
   max-width: 1000px;
 }
 

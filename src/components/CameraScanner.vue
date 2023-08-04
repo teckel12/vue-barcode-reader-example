@@ -99,7 +99,7 @@
           v-model="focusDistance"
           type="range"
           :min="hasFocusDistance.min || 0"
-          :max="Math.min(hasFocusDistance.max, 2) || 1"
+          :max="Math.min(hasFocusDistance.max, 1) || 1"
           :step="hasFocusDistance.step || 0.1"
         />
       </div>
@@ -210,7 +210,9 @@ export default {
     },
     'videoDevices.selectedIndex': {
       handler() {
-        this.deviceIndex = this.videoDevices?.selectedIndex
+        if (this.loaded) {
+          this.deviceIndex = this.videoDevices?.selectedIndex
+        }
       }
     },
   },

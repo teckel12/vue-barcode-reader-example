@@ -337,8 +337,9 @@ export default {
   justify-content: center;
   align-items: center;
 }
-.scanner-container {
-  max-width: 1000px;
+
+video {
+  max-width: 1000px !important;
 }
 
 .zoom-container {

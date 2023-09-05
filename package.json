@@ -10,7 +10,7 @@
     "@jamescoyle/vue-icon": "^0.1.2",
     "@mdi/font": "~7.2.96",
     "@mdi/js": "^7.2.96",
-    "@teckel/vue-barcode-reader": "^1.1.2",
+    "@teckel/vue-barcode-reader": "^1.1.3",
     "vue": "~3.3.4"
   },
   "devDependencies": {

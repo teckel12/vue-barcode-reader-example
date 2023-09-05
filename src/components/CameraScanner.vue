@@ -81,6 +81,7 @@
         v-model:hasAutofocus="hasAutofocus"
         v-model:hasTorch="hasTorch"
         v-model:hasZoom="hasZoom"
+        v-model:cameraDetails="cameraDetails"
         :landscape="landscape"
         :torch="torch"
         :zoom="Number(zoom)"
@@ -89,6 +90,7 @@
         :device-index="deviceIndex"
         @decode="onDecode"
         @loaded="onLoaded"
+        @result="onResult"
       />
       <div
         v-if="!autofocus && hasFocusDistance && loaded"
@@ -156,6 +158,7 @@ const initialState = {
   deviceIndex: null,
   debounce: false,
   debounceTimeout: null,
+  cameraDetails: {},
   isMobile: navigator?.userAgentData?.mobile || navigator?.platform === 'iPad' || navigator?.platform === 'iPhone',
   isAndroid: navigator?.userAgentData?.platform === 'Android',
   isChrome: navigator?.userAgentData?.brands.findIndex(brand => brand.brand === 'Google Chrome' || brand.brand === 'Chromium') !== -1,
@@ -174,7 +177,7 @@ const initialState = {
 
 export default {
   components: { StreamBarcodeReader, SvgIcon },
-  emits: ['update:modelValue', 'update:openModal'],
+  emits: ['update:modelValue', 'update:openModal', 'update:cameraDetails', 'update:rawResult'],
   props: {
     modelValue: {
       type: [String, Number],
@@ -235,6 +238,10 @@ export default {
       this.$emit('update:modelValue', decodedText)
       this.modalClose()
     },
+    onResult(result) {
+      console.log('Raw Result:', result)
+      this.$emit('update:rawResult', JSON.parse(JSON.stringify(result)))
+    },
     switchInputDevice() {
       const length = this.videoDevices?.devices?.length
       if (this.deviceIndex >= 0 && length > 1) {
@@ -253,6 +260,7 @@ export default {
       }
     },
     modalClose() {
+      this.$emit('update:cameraDetails', this.cameraDetails)
       Object.assign(this.$data, initialState)
       this.$emit('update:openModal', false)
     },

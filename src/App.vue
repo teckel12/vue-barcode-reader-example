@@ -21,9 +21,31 @@
       <a href="https://www.npmjs.com/package/@teckel/vue-barcode-reader" target="_blank">@teckel/vue-barcode-reader</a>
     </p>
   </div>
+
+  <h3 style="margin-top: 30px;">View raw scanning/camera results</h3>
+  <button
+    v-if="rawResult"
+    :style="showResults === 1 ? 'background-color: black; color: white' : ''"
+    @click="showResults = showResults === 1 ? false : 1"
+  >
+    Raw scan result
+  </button>
+  &nbsp;
+  <button
+    v-if="cameraDetails"
+    :style="showResults === 2 ? 'background-color: black; color: white' : ''"
+    @click="showResults = showResults === 2 ? false : 2"
+  >
+    Camera details
+  </button>
+  <pre v-if="showResults === 1">{{ rawResult }}</pre>
+  <pre v-if="showResults === 2">{{ cameraDetails }}</pre>
+
   <CameraScanner
     v-model="barcode"
     v-model:open-modal="barcodeModalState"
+    v-model:camera-details="cameraDetails"
+    v-model:raw-result="rawResult"
   />
 </template>
 
@@ -40,6 +62,9 @@ export default {
     return {
       barcode: 'Click to scan barcode',
       barcodeModalState: false,
+      cameraDetails: {},
+      rawResult: {},
+      showResults: false,
       icons: {
         mdiBarcodeScan,
       },
@@ -101,5 +126,9 @@ body {
 }
 a {
   color: #42b983;
+}
+pre {
+  text-align: left;
+  padding-left: 10px;
 }
 </style>

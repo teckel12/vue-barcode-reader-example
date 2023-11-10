@@ -88,6 +88,7 @@
         :autofocus="autofocus"
         :focus-distance="Number(focusDistance)"
         :device-index="deviceIndex"
+        :ms-between-decoding="500"
         @decode="onDecode"
         @loaded="onLoaded"
         @result="onResult"

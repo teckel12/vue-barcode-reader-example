@@ -1,6 +1,6 @@
 {
   "name": "vue-barcode-reader-example",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
@@ -10,7 +10,7 @@
     "@jamescoyle/vue-icon": "^0.1.2",
     "@mdi/font": "~7.2.96",
     "@mdi/js": "^7.2.96",
-    "@teckel/vue-barcode-reader": "^1.1.6",
+    "@teckel/vue-barcode-reader": "^1.1.7",
     "vue": "~3.3.4"
   },
   "devDependencies": {

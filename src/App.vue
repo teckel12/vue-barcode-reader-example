@@ -1,5 +1,6 @@
 <template>
   <h1>Vue Barcode Reader</h1>
+  <h2>v{{ version }}</h2>
   <h3>Use mobile device for all features</h3>
   <div class="input-box">
     Barcode:
@@ -60,6 +61,7 @@ export default {
   components: { CameraScanner, SvgIcon },
   data() {
     return {
+      version: __APP_VERSION__,
       barcode: 'Click to scan barcode',
       barcodeModalState: false,
       cameraDetails: {},
@@ -81,6 +83,12 @@ body {
   margin: 0;
   padding: 0;
   background-color: #f6f6f6;
+}
+h1 {
+  margin-bottom: 0;
+}
+h2 {
+  margin-top: 0;
 }
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
